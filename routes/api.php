@@ -29,5 +29,5 @@ Route::group([
     Route::get('/user-profile', "App\Http\Controllers\Api\AuthController@userProfile")->name("userProfile");
 });
 Route::resource('products', 'App\Http\Controllers\ProductController');
-Route::post('products/update', 'App\Http\Controllers\ProductController@apiUpdate');
+Route::put('products/update-product/{product}', 'App\Http\Controllers\ProductController@apiUpdate');
 

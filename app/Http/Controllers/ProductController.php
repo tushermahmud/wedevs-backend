@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     public function __construct(){
-        $this->middleware('auth:api');
     }
     /**
      * Display a listing of the resource.
@@ -18,6 +17,10 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::all();
+        if($products->count()>1){
+            return response()->json(['error'=>"product does not have data"],200);
+
+        }
         return response()->json(['products'=>$products],200);
         //
     }
@@ -56,21 +59,7 @@ class ProductController extends Controller
         $product=Product::create($data);
         return response()->json($product);
     }
-    private function handleRequest($request){
-        // $data=$request->all();
-        // if( $request->hasFile('image')){
-
-        //     $image              =$request->file('image');
-        //     $filename           =$image->getClientOriginalName();
-        //     $uploadPath         =public_path('uploads');
-        //     $destinationPath    =$uploadPath;
-        //     $successUploaded=$image->move($destinationPath, $filename);
-
-        //     $data['image']=$filename;
-
-        // }
-        // return $data;
-    }
+   
 
     /**
      * Display the specified resource.
@@ -103,30 +92,59 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function apiUpdate(Request $request){
-        return response()->json($request->all());
-        $product=Product::where('id',$request->id)->get();
-        $request->validate([
-            'title' => 'required',
-            'description'          =>'required',
-            'price'                 =>'required',
-        ]);
-        // if($product->image!=null){
+
+        $product=Product::where('id',$request->segments()[3])->get();
+
+        // $request->validate([
+        //     'title' => 'required',
+        //     'description'          =>'required',
+        //     'price'                 =>'required',
+        // ]);
+        $data['title'] = $request->title;
+        $data['description'] = $request->description;
+        $data['price'] = $request->price;
+        // if($product->image){
         //     $oldImage=$product->image;
         //     if($oldImage!=$product->image);
         //     $this->removeImage($oldImage);
         // }
-        
-        $data=$this->handleRequest($request);
-        $product->update($data);
-        return response()->json($product);
+
+        // return response()->json($request->all());
+        $filename = $request->file('image')->getClientOriginalName();
+        $uploadPath         =public_path('uploads');
+        $destinationPath    =$uploadPath;
+        $successUploaded=$request->file('image')->move($destinationPath, $filename);
+         $data['image'] = $filename;
+        return response()->json($data);
+
+        $newProduct = Product::where('id', '=', $request->segments()[3])->update(['title' => $data['title'],'description'=>$data['description'],'price'=>$data['price'],'image'=>$data['image']]);
+        return response()->json($newProduct);
 
 
+    }
+     public function handleRequest($request){
+        $data=$request;
+
+        if( $request->hasFile('image')){
+
+            $image              =$request->file('image');
+            $filename           =$image->getClientOriginalName();
+            $uploadPath         =public_path('uploads');
+            $destinationPath    =$uploadPath;
+            $successUploaded=$image->move($destinationPath, $filename);
+
+            $data['image']=$filename;
+
+        }
+        return response()->json($data);
+
+        return $data;
     }
     public function update(Requests\ProductRequest $request,$id)
     {
 
         // $product=Product::findOrFail($request->id);
-        return response()->json($product);
+        return response()->json($$id);
 
         $oldImage=$post->image;
         if($oldImage!=$post->image);
