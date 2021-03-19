@@ -17,7 +17,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::all();
-        if($products->count()>1){
+        if($products->count()<1){
             return response()->json(['error'=>"product does not have data"],200);
 
         }
@@ -103,28 +103,27 @@ class ProductController extends Controller
         $data['title'] = $request->title;
         $data['description'] = $request->description;
         $data['price'] = $request->price;
-        // if($product->image){
-        //     $oldImage=$product->image;
-        //     if($oldImage!=$product->image);
-        //     $this->removeImage($oldImage);
-        // }
-
-        // return response()->json($request->all());
+        if($file = $request->file('image')){
         $filename = $request->file('image')->getClientOriginalName();
         $uploadPath         =public_path('uploads');
         $destinationPath    =$uploadPath;
         $successUploaded=$request->file('image')->move($destinationPath, $filename);
          $data['image'] = $filename;
-        return response()->json($data);
+         $newProduct = Product::where('id',$request->segments()[3])->update(['title' => $data['title'],'description'=>$data['description'],'price'=>$data['price'],'image'=>$data['image']]);
+         return response()->json($newProduct);
 
-        $newProduct = Product::where('id', '=', $request->segments()[3])->update(['title' => $data['title'],'description'=>$data['description'],'price'=>$data['price'],'image'=>$data['image']]);
-        return response()->json($newProduct);
+        }else{
+            $newProduct = Product::where('id',$request->segments()[3])->update(['title' => $data['title'],'description'=>$data['description'],'price'=>$data['price']]);
+            return response()->json($newProduct);
+
+        }
+        
+
 
 
     }
-     public function handleRequest($request){
-        $data=$request;
-
+    private function handleRequest($request){
+        $data=$request->all();
         if( $request->hasFile('image')){
 
             $image              =$request->file('image');
@@ -136,8 +135,6 @@ class ProductController extends Controller
             $data['image']=$filename;
 
         }
-        return response()->json($data);
-
         return $data;
     }
     public function update(Requests\ProductRequest $request,$id)
